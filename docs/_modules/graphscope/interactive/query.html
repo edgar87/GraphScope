@@ -211,6 +211,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span></div>
 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.InteractiveQuery &lt;</span><span class="si">{self._graph_url}</span><span class="s2">&gt;&quot;</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the vineyard object id of graph.</span>
@@ -257,22 +260,12 @@
         <span class="k">def</span> <span class="nf">load_subgraph</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
             <span class="kn">import</span> <span class="nn">vineyard</span>
 
-            <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">][</span>
-                <span class="s2">&quot;vineyard_rpc_endpoint&quot;</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-            <span class="n">client</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">))</span>
-
-            <span class="c1"># get vertex/edge stream id</span>
-            <span class="n">vstream</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="n">estream</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-
             <span class="c1"># invoke load_from</span>
             <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
-                <span class="n">edges</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">estream</span><span class="p">)],</span>
-                <span class="n">vertices</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vstream</span><span class="p">)],</span>
+                <span class="n">edges</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))],</span>
+                <span class="n">vertices</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))],</span>
                 <span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">client</span><span class="o">.</span><span class="n">put_name</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">),</span> <span class="n">graph_name</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;subgraph has been loaded&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">g</span>
 
